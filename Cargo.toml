@@ -1,0 +1,15 @@
+[package]
+name = "fcs-compose"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures = "0.3.28"
+pin-project = "1.1.0"
+rustc-hash = "1.1.0"
+scoped-tls = "1.0.1"
+async-stream = "0.3.5"
+bumpalo = { version = "3.13.0", features = ["boxed"] }
+
+[dev_dependencies]
+pollster = "0.3.0"
