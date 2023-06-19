@@ -28,8 +28,8 @@ fn main() {
 fn app(ctx: &mut ComponentContext) -> bool {
     // composition: compose counter components to parent component
     // inheritance: create new component function using closure to supply prop to counter component function
-    use_child(ctx, |child_ctx| counter(child_ctx, "Counter 1", &0));
-    use_child(ctx, |child_ctx| counter(child_ctx, "Counter 2", &1));
+    let mut counter1 = use_child(ctx, |child_ctx| counter(child_ctx, "Counter 1", &0));
+    let mut counter2 = use_child(ctx, |child_ctx| counter(child_ctx, "Counter 2", &1));
 
     // when mutably borrowed, signal async executor by abusing rust deref coercion
     let mut iter = use_state(ctx, || 0);
@@ -49,6 +49,8 @@ fn app(ctx: &mut ComponentContext) -> bool {
     });
 
     println!("App update");
+    counter1.update(ctx.executor_context());
+    counter2.update(ctx.executor_context());
 
     *iter >= 100
 }
