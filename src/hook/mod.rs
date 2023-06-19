@@ -28,7 +28,7 @@ pub struct Ref<'a, T>(&'a mut T);
 
 impl<T> Ref<'_, T> {
     pub fn pin_mut(this: &mut Self) -> Pin<&mut T> {
-        // SAFETY: value is allocated on heap and never move
+        // SAFETY: value is allocated on heap and has drop guarantee
         unsafe {
             Pin::new_unchecked(&mut *this)
         }
