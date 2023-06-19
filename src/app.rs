@@ -83,7 +83,7 @@ pub fn use_system<'a, T: Any>(
             unsafe { BumpBox::from_raw(addr_of_mut!(*value)) }
         });
 
-        // SAFETY: lifetime 'a is contained inside app scope
+        // SAFETY: system is allocated on heap and lifetime 'a is contained inside app scope
         System(unsafe { &*ptr::addr_of!(*system.downcast_ref::<T>().unwrap()) })
     })
 }

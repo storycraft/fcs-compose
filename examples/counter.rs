@@ -8,7 +8,7 @@ use futures::{pin_mut, StreamExt};
 use fcs_compose::{
     app::App,
     component::ComponentContext,
-    hook::{child::use_child, state::use_state, use_once, use_cleanup},
+    hook::{child::use_child, state::use_state, use_cleanup, use_once},
 };
 
 fn main() {
