@@ -65,7 +65,7 @@ impl Default for App {
     }
 }
 
-pub fn use_system<'a, T: 'static>(
+pub fn use_system<'a, T: Any>(
     _ctx: &ComponentContext<'a, '_>,
     initializer: impl FnOnce() -> T + Any,
 ) -> System<'a, T> {
@@ -77,21 +77,22 @@ pub fn use_system<'a, T: 'static>(
         let mut system_map = app.system_map.borrow_mut();
 
         let system = system_map.entry(initializer.type_id()).or_insert_with(|| {
-            let value = app.arena.alloc(RefCell::new(initializer())) as &mut dyn Any;
+            let value = app.arena.alloc(initializer()) as &mut dyn Any;
 
             // SAFETY: value is allocated in self-contained arena and has correct drop order
             unsafe { BumpBox::from_raw(addr_of_mut!(*value)) }
         });
 
-        System(unsafe { &*ptr::addr_of!(*system.downcast_ref::<RefCell<T>>().unwrap()) })
+        // SAFETY: lifetime 'a is contained inside app scope
+        System(unsafe { &*ptr::addr_of!(*system.downcast_ref::<T>().unwrap()) })
     })
 }
 
 #[derive(Debug)]
-pub struct System<'a, T: ?Sized>(&'a RefCell<T>);
+pub struct System<'a, T: ?Sized>(&'a T);
 
 impl<T: ?Sized> Deref for System<'_, T> {
-    type Target = RefCell<T>;
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
         self.0
