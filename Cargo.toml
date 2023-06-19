@@ -2,6 +2,8 @@
 name = "fcs-compose"
 version = "0.1.0"
 edition = "2021"
+authors = ["storycraft <storycraft@pancake.sh>"]
+license = "MIT"
 
 [dependencies]
 futures = "0.3.28"
