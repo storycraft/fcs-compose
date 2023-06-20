@@ -38,18 +38,21 @@ impl App {
         }
     }
 
-    pub fn run<R>(self, root_fn: impl FnMut(&mut ComponentContext) -> R) -> impl Stream<Item = R> {
+    pub fn run<R>(
+        self,
+        mut root_fn: impl FnMut(&mut ComponentContext) -> R + Any,
+    ) -> impl Stream<Item = R> {
         if APP_CONTEXT.is_set() {
             panic!("Cannot run another App inside App scope");
         }
 
-        let mut root = Component::new(root_fn);
+        let mut root = Component::new();
 
         stream! {
             loop {
                 yield poll_fn(|context| {
                     Poll::Ready(APP_CONTEXT.set(&self, || {
-                        root.update(context)
+                        root.update(context, &mut root_fn)
                     }))
                 }).await;
 

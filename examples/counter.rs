@@ -8,7 +8,7 @@ use futures::{pin_mut, StreamExt};
 use fcs_compose::{
     app::App,
     component::ComponentContext,
-    hook::{child::use_child, state::use_state, use_cleanup, use_once},
+    hook::{container::use_container, state::use_state, use_cleanup, use_once},
 };
 
 fn main() {
@@ -26,10 +26,7 @@ fn main() {
 }
 
 fn app(ctx: &mut ComponentContext) -> bool {
-    // composition: compose counter components to parent component
-    // inheritance: create new component function using closure to supply prop to counter component function
-    let mut counter1 = use_child(ctx, |child_ctx| counter(child_ctx, "Counter 1", &0));
-    let mut counter2 = use_child(ctx, |child_ctx| counter(child_ctx, "Counter 2", &1));
+    let mut container = use_container(ctx);
 
     // when mutably borrowed, signal async executor by abusing rust deref coercion
     let mut iter = use_state(ctx, || 0);
@@ -49,14 +46,19 @@ fn app(ctx: &mut ComponentContext) -> bool {
     });
 
     println!("App update");
-    counter1.update(ctx.executor_context());
-    counter2.update(ctx.executor_context());
+
+    // composition: compose counter components to parent component
+    // inheritance: create new component function using closure to supply prop to counter component function
+    // Efficently perform reconciliation using container hook
+    container
+        .child(ctx, |child_ctx| counter(child_ctx, "Counter 1", 0))
+        .child(ctx, |child_ctx| counter(child_ctx, "Counter 2", 1));
 
     *iter >= 100
 }
 
-fn counter(ctx: &mut ComponentContext, name: &str, props: &i32) {
-    let mut num = use_state(ctx, || *props);
+fn counter(ctx: &mut ComponentContext, name: &str, props: i32) {
+    let mut num = use_state(ctx, || props);
 
     *num += 1;
 

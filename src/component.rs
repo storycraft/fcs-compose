@@ -4,7 +4,10 @@
  * Copyright (c) storycraft. Licensed under the Apache Licence 2.0.
  */
 
-use std::{any::Any, task::Context};
+use std::{
+    any::{Any, TypeId},
+    task::Context,
+};
 
 use crate::ref_store::{RefAccesser, RefStore};
 
@@ -25,25 +28,35 @@ impl<'a, 'ctx> ComponentContext<'a, 'ctx> {
 }
 
 #[derive(Debug)]
-pub struct Component<F> {
-    component_fn: F,
+pub struct Component {
+    last_id: TypeId,
     refs: RefStore,
 }
 
-impl<F: FnMut(&mut ComponentContext) -> R, R> Component<F> {
-    pub fn new(component_fn: F) -> Self {
+impl Component {
+    pub fn new() -> Self {
         Self {
-            component_fn,
+            last_id: TypeId::of::<()>(),
             refs: RefStore::new(),
         }
     }
 
-    pub fn update(&mut self, context: &mut Context) -> R {
+    pub fn update<R>(
+        &mut self,
+        context: &mut Context,
+        component_fn: &mut (impl FnMut(&mut ComponentContext) -> R + Any),
+    ) -> R {
+        let id = (*component_fn).type_id();
+        if self.last_id != id {
+            self.refs = RefStore::new();
+            self.last_id = id;
+        }
+
         let mut ctx = ComponentContext {
             ref_accesser: self.refs.accesser(),
             context,
         };
 
-        (self.component_fn)(&mut ctx)
+        (component_fn)(&mut ctx)
     }
 }
