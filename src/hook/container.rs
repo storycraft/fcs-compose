@@ -6,6 +6,8 @@
 
 use std::any::Any;
 
+use smallvec::SmallVec;
+
 use crate::component::{Component, ComponentContext};
 
 use super::{use_ref, Ref};
@@ -13,7 +15,7 @@ use super::{use_ref, Ref};
 #[derive(Debug)]
 pub struct Container<'a> {
     index: usize,
-    components: Ref<'a, Vec<Component>>,
+    components: Ref<'a, SmallVec<[Component; 1]>>,
 }
 
 impl Container<'_> {
@@ -38,8 +40,8 @@ impl Container<'_> {
 
 impl Drop for Container<'_> {
     fn drop(&mut self) {
-        if self.components.len() != self.index {
-            self.components.shrink_to(self.index);
+        if self.components.len() > self.index {
+            self.components.resize_with(self.index, || unreachable!());
         }
     }
 }
@@ -47,6 +49,6 @@ impl Drop for Container<'_> {
 pub fn use_container<'a>(ctx: &mut ComponentContext<'a, '_>) -> Container<'a> {
     Container {
         index: 0,
-        components: use_ref(ctx, Vec::<Component>::new),
+        components: use_ref(ctx, SmallVec::new),
     }
 }

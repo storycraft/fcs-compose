@@ -12,6 +12,7 @@ rustc-hash = "1.1.0"
 scoped-tls = "1.0.1"
 async-stream = "0.3.5"
 bumpalo = { version = "3.13.0", features = ["boxed"] }
+smallvec = "1.10.0"
 
 [dev_dependencies]
 pollster = "0.3.0"
