@@ -38,7 +38,9 @@ impl Container<'_> {
 
 impl Drop for Container<'_> {
     fn drop(&mut self) {
-        self.components.shrink_to(self.index);
+        if self.components.len() != self.index {
+            self.components.shrink_to(self.index);
+        }
     }
 }
 
