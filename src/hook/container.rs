@@ -4,8 +4,6 @@
  * Copyright (c) storycraft. Licensed under the Apache Licence 2.0.
  */
 
-use std::any::Any;
-
 use smallvec::SmallVec;
 
 use crate::component::{Component, ComponentContext};
@@ -22,7 +20,7 @@ impl Container<'_> {
     pub fn child<R>(
         &mut self,
         ctx: &mut ComponentContext,
-        mut component_fn: impl FnMut(&mut ComponentContext) -> R + Any,
+        mut component_fn: impl FnMut(&mut ComponentContext) -> R,
     ) -> &mut Self {
         let component = if self.components.len() <= self.index {
             self.components.push(Component::new());

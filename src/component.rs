@@ -4,10 +4,7 @@
  * Copyright (c) storycraft. Licensed under the Apache Licence 2.0.
  */
 
-use std::{
-    any::{Any, TypeId},
-    task::Context,
-};
+use std::{any::Any, task::Context};
 
 use crate::ref_store::{RefAccesser, RefStore};
 
@@ -29,14 +26,14 @@ impl<'a, 'ctx> ComponentContext<'a, 'ctx> {
 
 #[derive(Debug)]
 pub struct Component {
-    last_id: TypeId,
+    last_id: usize,
     refs: RefStore,
 }
 
 impl Component {
     pub fn new() -> Self {
         Self {
-            last_id: TypeId::of::<()>(),
+            last_id: 0,
             refs: RefStore::new(),
         }
     }
@@ -44,9 +41,10 @@ impl Component {
     pub fn update<R>(
         &mut self,
         context: &mut Context,
-        component_fn: &mut (impl FnMut(&mut ComponentContext) -> R + Any),
+        component_fn: &mut impl FnMut(&mut ComponentContext) -> R,
     ) -> R {
-        let id = (*component_fn).type_id();
+        let id = uid(component_fn);
+
         if self.last_id != id {
             self.refs = RefStore::new();
             self.last_id = id;
@@ -59,4 +57,17 @@ impl Component {
 
         (component_fn)(&mut ctx)
     }
+}
+
+fn uid<F: FnMut(&mut ComponentContext) -> R, R>(_: &F) -> usize {
+    fn helper<F: FnMut(&mut ComponentContext) -> R, R>(
+        dummy: fn(&str),
+        mut f: F,
+        ctx: &mut ComponentContext,
+    ) -> R {
+        dummy(std::any::type_name::<F>());
+        f(ctx)
+    }
+
+    helper::<F, R> as usize
 }

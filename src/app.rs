@@ -40,7 +40,7 @@ impl App {
 
     pub fn run<R>(
         self,
-        mut root_fn: impl FnMut(&mut ComponentContext) -> R + Any,
+        mut root_fn: impl FnMut(&mut ComponentContext) -> R,
     ) -> impl Stream<Item = R> {
         if APP_CONTEXT.is_set() {
             panic!("Cannot run another App inside App scope");
