@@ -4,7 +4,11 @@
  * Copyright (c) storycraft. Licensed under the Apache Licence 2.0.
  */
 
-use std::{any::Any, task::Context};
+use std::{
+    any::{Any, TypeId},
+    mem,
+    task::Context,
+};
 
 use crate::ref_store::{RefAccesser, RefStore};
 
@@ -26,14 +30,14 @@ impl<'a, 'ctx> ComponentContext<'a, 'ctx> {
 
 #[derive(Debug)]
 pub struct Component {
-    last_id: usize,
+    last_id: TypeId,
     refs: RefStore,
 }
 
 impl Component {
     pub fn new() -> Self {
         Self {
-            last_id: 0,
+            last_id: TypeId::of::<()>(),
             refs: RefStore::new(),
         }
     }
@@ -43,7 +47,7 @@ impl Component {
         context: &mut Context,
         component_fn: &mut impl FnMut(&mut ComponentContext) -> R,
     ) -> R {
-        let id = uid(component_fn);
+        let id = type_id_of_val(component_fn);
 
         if self.last_id != id {
             self.refs = RefStore::new();
@@ -59,15 +63,17 @@ impl Component {
     }
 }
 
-fn uid<F: FnMut(&mut ComponentContext) -> R, R>(_: &F) -> usize {
-    fn helper<F: FnMut(&mut ComponentContext) -> R, R>(
-        dummy: fn(&str),
-        mut f: F,
-        ctx: &mut ComponentContext,
-    ) -> R {
-        dummy(std::any::type_name::<F>());
-        f(ctx)
+fn type_id_of_val<T>(val: &T) -> TypeId {
+    trait NonStaticAny {
+        fn type_id(&self) -> TypeId
+        where
+            Self: 'static,
+        {
+            TypeId::of::<Self>()
+        }
     }
 
-    helper::<F, R> as usize
+    impl<T> NonStaticAny for T {}
+
+    unsafe { mem::transmute::<&dyn NonStaticAny, &dyn NonStaticAny>(val) }.type_id()
 }
