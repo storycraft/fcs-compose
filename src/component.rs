@@ -6,7 +6,6 @@
 
 use std::{
     any::{Any, TypeId},
-    mem,
     task::Context,
 };
 
@@ -63,17 +62,6 @@ impl Component {
     }
 }
 
-fn type_id_of_val<T>(val: &T) -> TypeId {
-    trait NonStaticAny {
-        fn type_id(&self) -> TypeId
-        where
-            Self: 'static,
-        {
-            TypeId::of::<Self>()
-        }
-    }
-
-    impl<T> NonStaticAny for T {}
-
-    unsafe { mem::transmute::<&dyn NonStaticAny, &dyn NonStaticAny>(val) }.type_id()
+fn type_id_of_val<T: ?Sized>(_: &T) -> TypeId {
+    (&|| {}).type_id()
 }
